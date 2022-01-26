@@ -6,14 +6,20 @@
 #include <QJsonObject>
 #include <sstream>
 #include <QString>
+#include <QFileDialog>
+#include <QStandardPaths>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setupUi(this);
 
+    hasFileOpen = false;
+    currentOpenFilePath = "";
+
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
     connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
     connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
     connect(actionOpen_Project, &QAction::triggered, this, &MainWindow::openProject);
 
@@ -117,11 +123,18 @@ void MainWindow::saveProject()
 {
     TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
 
-    QFile modelFile("C:/Users/parag/Desktop/testdata.json");
+    if (!hasFileOpen)
+    {
+        saveProjectAs();
+        return;
+    }
+
+    QFile modelFile(currentOpenFilePath);
 
     if (!modelFile.open(QIODevice::WriteOnly))
     {
         qWarning("Could not open file.");
+        return;
     }
 
     QJsonObject modelObject;
@@ -131,6 +144,34 @@ void MainWindow::saveProject()
     modelFile.close();
 }
 
+void MainWindow::saveProjectAs()
+{
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+
+    QString docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Project As"),
+                                                    hasFileOpen ? currentOpenFilePath : docPath,
+                                                    tr("JSON files (*.json)"));
+
+    QFile modelFile(fileName);
+
+    if (!modelFile.open(QIODevice::WriteOnly))
+    {
+        qWarning("Could not open file.");
+        return;
+    }
+
+    QJsonObject modelObject;
+    model->write(modelObject);
+
+    modelFile.write(QJsonDocument(modelObject).toJson());
+    modelFile.close();
+
+    hasFileOpen = true;
+    currentOpenFilePath = fileName;
+}
+
 void MainWindow::newProject()
 {
     const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
@@ -138,17 +179,26 @@ void MainWindow::newProject()
 
     projectTaskView->setModel(model);
 
-    // TODO: Do I need to remove old connects?
+    hasFileOpen = false;
+    currentOpenFilePath = "";
+
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
 }
 
 void MainWindow::openProject()
 {
-    QFile modelFile("C:/Users/parag/Desktop/testdata.json");
+    QString docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Open Project"),
+                                                    hasFileOpen ? currentOpenFilePath : docPath,
+                                                    tr("JSON files (*.json)"));
+
+    QFile modelFile(fileName);
 
     if (!modelFile.open(QIODevice::ReadOnly))
     {
         qWarning("Could not open file.");
+        return;
     }
 
     QByteArray modelData = modelFile.readAll();
@@ -162,6 +212,9 @@ void MainWindow::openProject()
     projectTaskView->setModel(model);
     for (int column = 0; column < model->columnCount(); column++)
         projectTaskView->resizeColumnToContents(column);
+
+    hasFileOpen = true;
+    currentOpenFilePath = fileName;
 
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
 }

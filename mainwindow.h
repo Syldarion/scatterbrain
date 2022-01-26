@@ -25,9 +25,11 @@ private slots:
     bool removeColumn();
     void removeRow();
     void saveProject();
+    void saveProjectAs();
     void newProject();
     void openProject();
-
-    // Task Slots
+private:
+    bool hasFileOpen;
+    QString currentOpenFilePath;
 };
 #endif // MAINWINDOW_H
