@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "ui_mainwindow.h"
+#include "tasktreemodel.h"
 
 #include <QMainWindow>
 #include <QContextMenuEvent>
@@ -29,6 +30,7 @@ private slots:
     void newProject();
     void openProject();
 private:
+    void loadModel(TaskTreeModel* model);
     bool hasFileOpen;
     QString currentOpenFilePath;
 };

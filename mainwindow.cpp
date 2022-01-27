@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "tasktreemodel.h"
 
 #include <QFile>
 #include <QJsonDocument>
@@ -108,6 +107,18 @@ void MainWindow::removeRow()
 
 void MainWindow::updateInterface()
 {
+    const bool hasModel = projectTaskView->model() == nullptr;
+
+    actionAdd_Task->setEnabled(hasModel);
+    actionAdd_Child_Task->setEnabled(hasModel);
+    actionDelete_Task->setEnabled(hasModel);
+    actionComplete_Task->setEnabled(hasModel);
+
+    if (!hasModel)
+    {
+        return;
+    }
+
     const bool hasCurrent = projectTaskView->selectionModel()->currentIndex().isValid();
     TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
     const bool taskIsComplete = hasCurrent && !(model->indexIsCompleted(projectTaskView->selectionModel()->currentIndex()));
@@ -142,6 +153,10 @@ void MainWindow::saveProject()
 
     modelFile.write(QJsonDocument(modelObject).toJson());
     modelFile.close();
+
+    std::ostringstream saveStr;
+    saveStr << "Saved project to " << currentOpenFilePath.toStdString();
+    statusBar()->showMessage(QString::fromStdString(saveStr.str()));
 }
 
 void MainWindow::saveProjectAs()
@@ -170,6 +185,10 @@ void MainWindow::saveProjectAs()
 
     hasFileOpen = true;
     currentOpenFilePath = fileName;
+
+    std::ostringstream saveStr;
+    saveStr << "Saved project to " << currentOpenFilePath.toStdString();
+    statusBar()->showMessage(QString::fromStdString(saveStr.str()));
 }
 
 void MainWindow::newProject()
@@ -177,12 +196,10 @@ void MainWindow::newProject()
     const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
     TaskTreeModel* model = new TaskTreeModel(headers);
 
-    projectTaskView->setModel(model);
+    loadModel(model);
 
     hasFileOpen = false;
     currentOpenFilePath = "";
-
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
 }
 
 void MainWindow::openProject()
@@ -209,12 +226,20 @@ void MainWindow::openProject()
     TaskTreeModel* model = new TaskTreeModel(headers);
     model->read(modelDoc.object());
 
-    projectTaskView->setModel(model);
-    for (int column = 0; column < model->columnCount(); column++)
-        projectTaskView->resizeColumnToContents(column);
+    loadModel(model);
 
     hasFileOpen = true;
     currentOpenFilePath = fileName;
 
+    std::ostringstream openStr;
+    openStr << "Opened project from " << currentOpenFilePath.toStdString();
+    statusBar()->showMessage(QString::fromStdString(openStr.str()));
+}
+
+void MainWindow::loadModel(TaskTreeModel* model)
+{
+    projectTaskView->setModel(model);
+    for (int column = 0; column < model->columnCount(); column++)
+        projectTaskView->resizeColumnToContents(column);
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
 }
