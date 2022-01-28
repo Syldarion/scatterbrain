@@ -28,6 +28,7 @@ private slots:
     void openProject();
     void openSettings();
     void closeApplication();
+    void renameOpenProject();
 private:
     void loadModel(TaskTreeModel* model);
     bool hasFileOpen;

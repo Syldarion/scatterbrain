@@ -33,6 +33,9 @@
           <pointsize>16</pointsize>
          </font>
         </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::ActionsContextMenu</enum>
+        </property>
         <property name="text">
          <string>No Project Opened</string>
         </property>
@@ -113,8 +116,15 @@
     <addaction name="actionDelete_Task"/>
     <addaction name="actionComplete_Task"/>
    </widget>
+   <widget class="QMenu" name="menuProject">
+    <property name="title">
+     <string>Project</string>
+    </property>
+    <addaction name="actionRename_Project"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTask"/>
+   <addaction name="menuProject"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionQuit">
@@ -195,6 +205,11 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionRename_Project">
+   <property name="text">
+    <string>Rename Project</string>
    </property>
   </action>
  </widget>

@@ -8,6 +8,8 @@
 #include <QString>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QInputDialog>
+#include <QLineEdit>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -18,6 +20,7 @@ MainWindow::MainWindow(QWidget* parent)
     currentOpenFilePath = "";
 
     projectTaskView->addActions({actionAdd_Task, actionAdd_Child_Task, actionDelete_Task, actionComplete_Task});
+    projectNameLabel->addAction(actionRename_Project);
 
     connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
     connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
@@ -27,6 +30,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::insertRow);
     connect(actionAdd_Child_Task, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionDelete_Task, &QAction::triggered, this, &MainWindow::removeRow);
+
+    connect(actionRename_Project, &QAction::triggered, this, &MainWindow::renameOpenProject);
 
     connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
@@ -239,6 +244,28 @@ void MainWindow::closeApplication()
 {
     //check for things being saved
     this->close();
+}
+
+void MainWindow::renameOpenProject()
+{
+    if (projectTaskView->model() == nullptr)
+    {
+        return;
+    }
+
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+    bool ok;
+    QString newName = QInputDialog::getText(this,
+                                            tr("New Project Name"),
+                                            tr("Project Name:"),
+                                            QLineEdit::Normal,
+                                            model->getProjectName(),
+                                            &ok);
+    if (ok && !newName.isEmpty())
+    {
+        model->setProjectName(newName);
+        projectNameLabel->setText(model->getProjectName());
+    }
 }
 
 void MainWindow::loadModel(TaskTreeModel* model)

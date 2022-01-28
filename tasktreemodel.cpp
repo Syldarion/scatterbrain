@@ -218,6 +218,11 @@ int TaskTreeModel::totalTasks()
     return rootItem->totalDescendants();
 }
 
+void TaskTreeModel::setProjectName(QString name)
+{
+    projectName = name;
+}
+
 QString TaskTreeModel::getProjectName()
 {
     return projectName;

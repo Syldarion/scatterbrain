@@ -41,6 +41,7 @@ public:
     int completedTasks();
     int totalTasks();
     int totalTopLevelTasks();
+    void setProjectName(QString name);
     QString getProjectName();
 private:
     QString projectName;
