@@ -52,6 +52,7 @@ void MainWindow::insertChild()
         return;
 
     projectTaskView->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
     updateInterface();
 }
 
@@ -79,6 +80,7 @@ void MainWindow::insertRow()
         return;
 
     projectTaskView->selectionModel()->setCurrentIndex(model->index(index.row() + 1, 0, index.parent()), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
     updateInterface();
 }
 
@@ -105,7 +107,7 @@ void MainWindow::removeRow()
 
 void MainWindow::updateInterface()
 {
-    const bool hasModel = projectTaskView->model() == nullptr;
+    const bool hasModel = projectTaskView->model() != nullptr;
 
     toggleProjectActions(hasModel);
 
