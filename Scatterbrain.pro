@@ -11,16 +11,21 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    settingswindow.cpp \
     taskitem.cpp \
-    tasktreemodel.cpp
+    tasktreemodel.cpp \
+    usersettings.cpp
 
 HEADERS += \
     mainwindow.h \
+    settingswindow.h \
     taskitem.h \
-    tasktreemodel.h
+    tasktreemodel.h \
+    usersettings.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    settingswindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

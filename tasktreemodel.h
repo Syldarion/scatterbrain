@@ -41,6 +41,7 @@ public:
     int completedTasks();
     int totalTasks();
     int totalTopLevelTasks();
+    QString getProjectName();
 private:
     QString projectName;
     TaskItem* getItem(const QModelIndex& index) const;

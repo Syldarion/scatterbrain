@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "settingswindow.h"
 
 #include <QFile>
 #include <QJsonDocument>
@@ -16,7 +17,6 @@ MainWindow::MainWindow(QWidget* parent)
     hasFileOpen = false;
     currentOpenFilePath = "";
 
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
     connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
     connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
     connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
@@ -25,6 +25,9 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::insertRow);
     connect(actionAdd_Child_Task, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionDelete_Task, &QAction::triggered, this, &MainWindow::removeRow);
+
+    connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
+    connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
 }
 
 #ifndef QT_NO_CONTEXTMENU
@@ -163,7 +166,7 @@ void MainWindow::saveProjectAs()
 {
     TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
 
-    QString docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString docPath = UserSettings::getInstance()->getProjectDirectory();
     QString fileName = QFileDialog::getSaveFileName(this,
                                                     tr("Save Project As"),
                                                     hasFileOpen ? currentOpenFilePath : docPath,
@@ -204,7 +207,7 @@ void MainWindow::newProject()
 
 void MainWindow::openProject()
 {
-    QString docPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString docPath = UserSettings::getInstance()->getProjectDirectory();
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Open Project"),
                                                     hasFileOpen ? currentOpenFilePath : docPath,
@@ -236,10 +239,26 @@ void MainWindow::openProject()
     statusBar()->showMessage(QString::fromStdString(openStr.str()));
 }
 
+void MainWindow::openSettings()
+{
+    settingsWindow = new SettingsWindow();
+    settingsWindow->show();
+}
+
+void MainWindow::closeApplication()
+{
+    //check for things being saved
+    this->close();
+}
+
 void MainWindow::loadModel(TaskTreeModel* model)
 {
     projectTaskView->setModel(model);
     for (int column = 0; column < model->columnCount(); column++)
         projectTaskView->resizeColumnToContents(column);
+
+    projectNameLabel->setText(model->getProjectName());
+
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
 }

@@ -188,11 +188,15 @@ bool TaskTreeModel::setHeaderData(int section, Qt::Orientation orientation, cons
 
 void TaskTreeModel::read(const QJsonObject &json)
 {
-    rootItem->read(json["taskdata"].toObject());
+    if (json.contains("projectName"))
+        projectName = json["projectName"].toString();
+    if (json.contains("taskdata"))
+        rootItem->read(json["taskdata"].toObject());
 }
 
 void TaskTreeModel::write(QJsonObject &json) const
 {
+    json["projectName"] = projectName;
     QJsonObject taskData = json["taskdata"].toObject();
     rootItem->write(taskData);
     json["taskdata"] = taskData;
@@ -212,4 +216,9 @@ int TaskTreeModel::completedTasks()
 int TaskTreeModel::totalTasks()
 {
     return rootItem->totalDescendants();
+}
+
+QString TaskTreeModel::getProjectName()
+{
+    return projectName;
 }
