@@ -25,6 +25,9 @@
      <layout class="QHBoxLayout" name="projectInfoLayout">
       <item>
        <widget class="QLabel" name="projectNameLabel">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="font">
          <font>
           <pointsize>16</pointsize>
@@ -48,7 +51,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QTreeView" name="projectTaskView"/>
+     <widget class="QTreeView" name="projectTaskView">
+      <property name="contextMenuPolicy">
+       <enum>Qt::ActionsContextMenu</enum>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="taskViewControlsLayout">

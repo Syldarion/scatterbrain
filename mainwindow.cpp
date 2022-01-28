@@ -17,6 +17,8 @@ MainWindow::MainWindow(QWidget* parent)
     hasFileOpen = false;
     currentOpenFilePath = "";
 
+    projectTaskView->addActions({actionAdd_Task, actionAdd_Child_Task, actionDelete_Task, actionComplete_Task});
+
     connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
     connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
     connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
@@ -29,18 +31,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
 }
-
-#ifndef QT_NO_CONTEXTMENU
-void MainWindow::contextMenuEvent(QContextMenuEvent* event)
-{
-    QMenu menu(this);
-    menu.addAction(actionAdd_Task);
-    menu.addAction(actionAdd_Child_Task);
-    menu.addAction(actionDelete_Task);
-    menu.addAction(actionComplete_Task);
-    menu.exec(event->globalPos());
-}
-#endif // QT_NO_CONTEXTMENU
 
 void MainWindow::insertChild()
 {
