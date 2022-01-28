@@ -107,10 +107,7 @@ void MainWindow::updateInterface()
 {
     const bool hasModel = projectTaskView->model() == nullptr;
 
-    actionAdd_Task->setEnabled(hasModel);
-    actionAdd_Child_Task->setEnabled(hasModel);
-    actionDelete_Task->setEnabled(hasModel);
-    actionComplete_Task->setEnabled(hasModel);
+    toggleProjectActions(hasModel);
 
     if (!hasModel)
     {
@@ -198,6 +195,8 @@ void MainWindow::newProject()
 
     hasFileOpen = false;
     currentOpenFilePath = "";
+
+    toggleProjectActions(true);
 }
 
 void MainWindow::openProject()
@@ -232,6 +231,8 @@ void MainWindow::openProject()
     std::ostringstream openStr;
     openStr << "Opened project from " << currentOpenFilePath.toStdString();
     statusBar()->showMessage(QString::fromStdString(openStr.str()));
+
+    toggleProjectActions(true);
 }
 
 void MainWindow::openSettings()
@@ -278,4 +279,15 @@ void MainWindow::loadModel(TaskTreeModel* model)
 
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
+}
+
+void MainWindow::toggleProjectActions(bool enabled)
+{
+    actionSave_Project_As->setEnabled(enabled);
+    actionSave_Project->setEnabled(enabled);
+    actionAdd_Task->setEnabled(enabled);
+    actionAdd_Child_Task->setEnabled(enabled);
+    actionDelete_Task->setEnabled(enabled);
+    actionComplete_Task->setEnabled(enabled);
+    actionRename_Project->setEnabled(enabled);
 }

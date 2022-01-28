@@ -31,6 +31,7 @@ private slots:
     void renameOpenProject();
 private:
     void loadModel(TaskTreeModel* model);
+    void toggleProjectActions(bool enabled);
     bool hasFileOpen;
     QString currentOpenFilePath;
     SettingsWindow* settingsWindow;

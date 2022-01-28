@@ -133,6 +133,9 @@
    </property>
   </action>
   <action name="actionSave_Project">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save Project</string>
    </property>
@@ -144,6 +147,9 @@
    </property>
   </action>
   <action name="actionSave_Project_As">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save Project As...</string>
    </property>
@@ -174,6 +180,9 @@
    </property>
   </action>
   <action name="actionAdd_Task">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Add Task</string>
    </property>
@@ -182,6 +191,9 @@
    </property>
   </action>
   <action name="actionAdd_Child_Task">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Add Child Task</string>
    </property>
@@ -190,6 +202,9 @@
    </property>
   </action>
   <action name="actionDelete_Task">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Delete Task</string>
    </property>
@@ -198,6 +213,9 @@
    </property>
   </action>
   <action name="actionComplete_Task">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Complete Task</string>
    </property>
@@ -208,6 +226,9 @@
    </property>
   </action>
   <action name="actionRename_Project">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Rename Project</string>
    </property>
