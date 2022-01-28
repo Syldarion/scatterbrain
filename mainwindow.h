@@ -32,8 +32,10 @@ private slots:
 private:
     void loadModel(TaskTreeModel* model);
     void toggleProjectActions(bool enabled);
+    void setModelDirty();
     bool hasFileOpen;
     QString currentOpenFilePath;
     SettingsWindow* settingsWindow;
+    bool isModelDirty;
 };
 #endif // MAINWINDOW_H

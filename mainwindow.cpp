@@ -10,6 +10,7 @@
 #include <QStandardPaths>
 #include <QInputDialog>
 #include <QLineEdit>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -154,6 +155,8 @@ void MainWindow::saveProject()
     std::ostringstream saveStr;
     saveStr << "Saved project to " << currentOpenFilePath.toStdString();
     statusBar()->showMessage(QString::fromStdString(saveStr.str()));
+
+    isModelDirty = false;
 }
 
 void MainWindow::saveProjectAs()
@@ -186,12 +189,30 @@ void MainWindow::saveProjectAs()
     std::ostringstream saveStr;
     saveStr << "Saved project to " << currentOpenFilePath.toStdString();
     statusBar()->showMessage(QString::fromStdString(saveStr.str()));
+
+    isModelDirty = false;
 }
 
 void MainWindow::newProject()
 {
     const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
     TaskTreeModel* model = new TaskTreeModel(headers);
+
+    bool ok;
+    QString newName = QInputDialog::getText(this,
+                                            tr("New Project"),
+                                            tr("Project Name:"),
+                                            QLineEdit::Normal,
+                                            "New Project",
+                                            &ok);
+
+    if (!ok)
+    {
+        delete model;
+        return;
+    }
+
+    model->setProjectName(newName);
 
     loadModel(model);
 
@@ -246,6 +267,29 @@ void MainWindow::openSettings()
 void MainWindow::closeApplication()
 {
     //check for things being saved
+    if (isModelDirty)
+    {
+        QMessageBox saveBox;
+        saveBox.setText("The open project has been modified.");
+        saveBox.setInformativeText("Do you want to save your changes?");
+        saveBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        saveBox.setDefaultButton(QMessageBox::Save);
+        int ret = saveBox.exec();
+
+        switch(ret)
+        {
+        case QMessageBox::Save:
+            saveProject();
+            break;
+        case QMessageBox::Discard:
+            break;
+        case QMessageBox::Cancel:
+            return;
+        default:
+            break;
+        }
+    }
+
     this->close();
 }
 
@@ -259,7 +303,7 @@ void MainWindow::renameOpenProject()
     TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
     bool ok;
     QString newName = QInputDialog::getText(this,
-                                            tr("New Project Name"),
+                                            tr("Rename Project"),
                                             tr("Project Name:"),
                                             QLineEdit::Normal,
                                             model->getProjectName(),
@@ -280,6 +324,7 @@ void MainWindow::loadModel(TaskTreeModel* model)
     projectNameLabel->setText(model->getProjectName());
 
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
 }
 
@@ -292,4 +337,9 @@ void MainWindow::toggleProjectActions(bool enabled)
     actionDelete_Task->setEnabled(enabled);
     actionComplete_Task->setEnabled(enabled);
     actionRename_Project->setEnabled(enabled);
+}
+
+void MainWindow::setModelDirty()
+{
+    isModelDirty = true;
 }
