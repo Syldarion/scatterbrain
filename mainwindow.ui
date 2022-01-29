@@ -101,6 +101,7 @@
     </property>
     <addaction name="actionNew_Project"/>
     <addaction name="actionOpen_Project"/>
+    <addaction name="actionOpen_Random_Project"/>
     <addaction name="actionSave_Project_As"/>
     <addaction name="actionSave_Project"/>
     <addaction name="separator"/>
@@ -231,6 +232,14 @@
    </property>
    <property name="text">
     <string>Rename Project</string>
+   </property>
+  </action>
+  <action name="actionOpen_Random_Project">
+   <property name="text">
+    <string>Open Random Project</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>

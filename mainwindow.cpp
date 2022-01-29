@@ -11,14 +11,18 @@
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QRandomGenerator>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setupUi(this);
 
+    discoverAvailableProjects();
+
     hasFileOpen = false;
     currentOpenFilePath = "";
+    isModelDirty = false;
 
     projectTaskView->addActions({actionAdd_Task, actionAdd_Child_Task, actionDelete_Task, actionComplete_Task});
     projectNameLabel->addAction(actionRename_Project);
@@ -27,6 +31,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
     connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
     connect(actionOpen_Project, &QAction::triggered, this, &MainWindow::openProject);
+    connect(actionOpen_Random_Project, &QAction::triggered, this, &MainWindow::openRandomProject);
 
     connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::insertRow);
     connect(actionAdd_Child_Task, &QAction::triggered, this, &MainWindow::insertChild);
@@ -230,32 +235,7 @@ void MainWindow::openProject()
                                                     hasFileOpen ? currentOpenFilePath : docPath,
                                                     tr("JSON files (*.json)"));
 
-    QFile modelFile(fileName);
-
-    if (!modelFile.open(QIODevice::ReadOnly))
-    {
-        qWarning("Could not open file.");
-        return;
-    }
-
-    QByteArray modelData = modelFile.readAll();
-    modelFile.close();
-    QJsonDocument modelDoc = QJsonDocument::fromJson(modelData);
-
-    const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
-    TaskTreeModel* model = new TaskTreeModel(headers);
-    model->read(modelDoc.object());
-
-    loadModel(model);
-
-    hasFileOpen = true;
-    currentOpenFilePath = fileName;
-
-    std::ostringstream openStr;
-    openStr << "Opened project from " << currentOpenFilePath.toStdString();
-    statusBar()->showMessage(QString::fromStdString(openStr.str()));
-
-    toggleProjectActions(true);
+    openProjectAtLocation(fileName);
 }
 
 void MainWindow::openSettings()
@@ -266,30 +246,8 @@ void MainWindow::openSettings()
 
 void MainWindow::closeApplication()
 {
-    //check for things being saved
-    if (isModelDirty)
-    {
-        QMessageBox saveBox;
-        saveBox.setText("The open project has been modified.");
-        saveBox.setInformativeText("Do you want to save your changes?");
-        saveBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-        saveBox.setDefaultButton(QMessageBox::Save);
-        int ret = saveBox.exec();
-
-        switch(ret)
-        {
-        case QMessageBox::Save:
-            saveProject();
-            break;
-        case QMessageBox::Discard:
-            break;
-        case QMessageBox::Cancel:
-            return;
-        default:
-            break;
-        }
-    }
-
+    if(!checkDirtyModel())
+        return;
     this->close();
 }
 
@@ -342,4 +300,92 @@ void MainWindow::toggleProjectActions(bool enabled)
 void MainWindow::setModelDirty()
 {
     isModelDirty = true;
+}
+
+void MainWindow::discoverAvailableProjects()
+{
+    QDir docDir(UserSettings::getInstance()->getProjectDirectory());
+    QFileInfoList projectFileInfo = docDir.entryInfoList({tr("*.json")}, QDir::Files | QDir::Readable);
+    foreach (const QFileInfo &info, projectFileInfo)
+        availableProjectPaths << info.absoluteFilePath();
+    QString statusMsg;
+    statusMsg = QString("Found ") + QString::number(availableProjectPaths.count()) + QString(" projects in ") + docDir.absolutePath();
+    statusBar()->showMessage(statusMsg);
+}
+
+void MainWindow::openRandomProject()
+{
+    int index;
+    QString nextPath;
+
+    do
+    {
+        index = QRandomGenerator::global()->bounded(availableProjectPaths.count());
+        nextPath = availableProjectPaths[index];
+    } while(nextPath == currentOpenFilePath);
+
+    openProjectAtLocation(nextPath);
+}
+
+void MainWindow::openProjectAtLocation(QString path)
+{
+    if (!checkDirtyModel())
+        return;
+
+    QFile modelFile(path);
+
+    if (!modelFile.open(QIODevice::ReadOnly))
+    {
+        qWarning("Could not open file.");
+        return;
+    }
+
+    QByteArray modelData = modelFile.readAll();
+    modelFile.close();
+    QJsonDocument modelDoc = QJsonDocument::fromJson(modelData);
+
+    const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
+    TaskTreeModel* model = new TaskTreeModel(headers);
+    model->read(modelDoc.object());
+
+    loadModel(model);
+
+    hasFileOpen = true;
+    currentOpenFilePath = path;
+
+    std::ostringstream openStr;
+    openStr << "Opened project from " << currentOpenFilePath.toStdString();
+    statusBar()->showMessage(QString::fromStdString(openStr.str()));
+
+    toggleProjectActions(true);
+
+    isModelDirty = false;
+}
+
+bool MainWindow::checkDirtyModel()
+{
+    if (isModelDirty)
+    {
+        QMessageBox saveBox;
+        saveBox.setText("The open project has been modified.");
+        saveBox.setInformativeText("Do you want to save your changes?");
+        saveBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        saveBox.setDefaultButton(QMessageBox::Save);
+        int ret = saveBox.exec();
+
+        switch(ret)
+        {
+        case QMessageBox::Save:
+            saveProject();
+            break;
+        case QMessageBox::Discard:
+            break;
+        case QMessageBox::Cancel:
+            return false;
+        default:
+            break;
+        }
+    }
+
+    return true;
 }

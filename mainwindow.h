@@ -29,6 +29,10 @@ private slots:
     void openSettings();
     void closeApplication();
     void renameOpenProject();
+    void discoverAvailableProjects();
+    void openRandomProject();
+    void openProjectAtLocation(QString path);
+    bool checkDirtyModel();
 private:
     void loadModel(TaskTreeModel* model);
     void toggleProjectActions(bool enabled);
@@ -37,5 +41,6 @@ private:
     QString currentOpenFilePath;
     SettingsWindow* settingsWindow;
     bool isModelDirty;
+    QStringList availableProjectPaths;
 };
 #endif // MAINWINDOW_H
