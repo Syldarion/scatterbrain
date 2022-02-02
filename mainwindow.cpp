@@ -223,8 +223,6 @@ void MainWindow::newProject()
 
     hasFileOpen = false;
     currentOpenFilePath = "";
-
-    toggleProjectActions(true);
 }
 
 void MainWindow::openProject()
@@ -284,6 +282,8 @@ void MainWindow::loadModel(TaskTreeModel* model)
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
+
+    updateInterface();
 }
 
 void MainWindow::toggleProjectActions(bool enabled)
@@ -356,8 +356,6 @@ void MainWindow::openProjectAtLocation(QString path)
     std::ostringstream openStr;
     openStr << "Opened project from " << currentOpenFilePath.toStdString();
     statusBar()->showMessage(QString::fromStdString(openStr.str()));
-
-    toggleProjectActions(true);
 
     isModelDirty = false;
 }

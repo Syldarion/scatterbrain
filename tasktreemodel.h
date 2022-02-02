@@ -48,6 +48,11 @@ private:
     TaskItem* getItem(const QModelIndex& index) const;
     TaskItem* rootItem;
     QStringList headerStrings;
+    bool isCheckboxColumn(const QModelIndex& index) const;
+
+    const int titleColumn = 0;
+    const int descColumn = 1;
+    const int doneColumn = 2;
 };
 
 #endif // TASKTREEMODEL_H

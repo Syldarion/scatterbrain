@@ -37,11 +37,12 @@ QVariant TaskTreeModel::data(const QModelIndex& index, int role) const
         return QVariant();
 
     TaskItem* item = getItem(index);
+    QVariant itemData = item->data(index.column());
 
-    if (role == Qt::CheckStateRole && index.column() == 2)
-        return static_cast<int>(item->data(2).toBool() ? Qt::Checked : Qt::Unchecked);
+    if (role == Qt::CheckStateRole && isCheckboxColumn(index) && itemData.typeId() == QMetaType::Bool)
+        return static_cast<int>(itemData.toBool() ? Qt::Checked : Qt::Unchecked);
 
-    return item->data(index.column());
+    return itemData;
 }
 
 Qt::ItemFlags TaskTreeModel::flags(const QModelIndex& index) const
@@ -51,8 +52,10 @@ Qt::ItemFlags TaskTreeModel::flags(const QModelIndex& index) const
 
     Qt::ItemFlags flags = Qt::ItemIsEditable | Qt::ItemIsSelectable | QAbstractItemModel::flags(index);
 
-    if (index.column() == 2)
+    if (isCheckboxColumn(index))
+    {
         flags |= Qt::ItemIsUserCheckable;
+    }
 
     return flags;
 }
@@ -205,7 +208,7 @@ void TaskTreeModel::write(QJsonObject &json) const
 bool TaskTreeModel::indexIsCompleted(const QModelIndex &index)
 {
     TaskItem* item = getItem(index);
-    return item->data(2).toBool();
+    return item->data(doneColumn).toBool();
 }
 
 int TaskTreeModel::completedTasks()
@@ -226,4 +229,14 @@ void TaskTreeModel::setProjectName(QString name)
 QString TaskTreeModel::getProjectName()
 {
     return projectName;
+}
+
+bool TaskTreeModel::isCheckboxColumn(const QModelIndex &index) const
+{
+    bool isCheckbox = false;
+
+    if (index.isValid())
+        isCheckbox = index.column() == doneColumn;
+
+    return isCheckbox;
 }
