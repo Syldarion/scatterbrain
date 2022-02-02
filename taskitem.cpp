@@ -36,7 +36,7 @@ int TaskItem::childNumber() const
 
 int TaskItem::columnCount() const
 {
-    return itemData.count();
+    return 1;
 }
 
 QVariant TaskItem::data(int column) const

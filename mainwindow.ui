@@ -40,7 +40,7 @@
          <string>No Project Opened</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -54,14 +54,76 @@
      </widget>
     </item>
     <item>
-     <widget class="QTreeView" name="projectTaskView">
-      <property name="contextMenuPolicy">
-       <enum>Qt::ActionsContextMenu</enum>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QTreeView" name="projectTaskView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::ActionsContextMenu</enum>
+        </property>
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="taskItemLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinAndMaxSize</enum>
+        </property>
+        <item>
+         <widget class="QLineEdit" name="taskTitleText">
+          <property name="placeholderText">
+           <string>Task Name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="taskDescriptionText">
+          <property name="placeholderText">
+           <string>Task Description</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="taskControls">
+          <item>
+           <widget class="QPushButton" name="completeTaskButton">
+            <property name="text">
+             <string>Complete Task</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="deleteTaskButton">
+            <property name="text">
+             <string>Delete Task</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="taskViewControlsLayout">
+      <item>
+       <widget class="QCheckBox" name="showCompletedTasksCheckbox">
+        <property name="text">
+         <string>Show Completed Tasks</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -74,13 +136,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="showCompletedTasksCheckbox">
-        <property name="text">
-         <string>Show Completed Tasks</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </item>

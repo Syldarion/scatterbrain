@@ -208,7 +208,7 @@ void TaskTreeModel::write(QJsonObject &json) const
 bool TaskTreeModel::indexIsCompleted(const QModelIndex &index)
 {
     TaskItem* item = getItem(index);
-    return item->data(doneColumn).toBool();
+    return item->data(DONE_COL).toBool();
 }
 
 int TaskTreeModel::completedTasks()
@@ -236,7 +236,7 @@ bool TaskTreeModel::isCheckboxColumn(const QModelIndex &index) const
     bool isCheckbox = false;
 
     if (index.isValid())
-        isCheckbox = index.column() == doneColumn;
+        isCheckbox = index.column() == DONE_COL;
 
     return isCheckbox;
 }
