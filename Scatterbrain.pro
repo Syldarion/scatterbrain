@@ -14,6 +14,7 @@ SOURCES += \
     settingswindow.cpp \
     taskitem.cpp \
     tasktreemodel.cpp \
+    tasktreemodelproxy.cpp \
     usersettings.cpp
 
 HEADERS += \
@@ -21,6 +22,7 @@ HEADERS += \
     settingswindow.h \
     taskitem.h \
     tasktreemodel.h \
+    tasktreemodelproxy.h \
     usersettings.h
 
 FORMS += \

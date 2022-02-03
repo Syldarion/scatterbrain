@@ -2,11 +2,13 @@
 #define MAINWINDOW_H
 
 #include "ui_mainwindow.h"
+#include "tasktreemodelproxy.h"
 #include "tasktreemodel.h"
 #include "settingswindow.h"
 
 #include <QMainWindow>
 #include <QContextMenuEvent>
+#include <QSortFilterProxyModel>
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
@@ -14,6 +16,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 private slots:
     void updateTaskView();
     void updateActions();
@@ -36,6 +39,8 @@ private slots:
     void updateCurrentItemTitle();
     void updateCurrentItemDescription();
     void completeCurrentItem();
+    void applyTaskChanges();
+    void changeCompletedFilter(int state);
 private:
     void loadModel(TaskTreeModel* model);
     void toggleProjectActions(bool enabled);
@@ -45,5 +50,6 @@ private:
     SettingsWindow* settingsWindow;
     bool isModelDirty;
     QStringList availableProjectPaths;
+    TaskTreeModelProxy* proxyModel;
 };
 #endif // MAINWINDOW_H

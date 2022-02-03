@@ -93,6 +93,13 @@
         <item>
          <layout class="QHBoxLayout" name="taskControls">
           <item>
+           <widget class="QPushButton" name="applyTaskButton">
+            <property name="text">
+             <string>Apply Changes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="completeTaskButton">
             <property name="text">
              <string>Complete Task</string>
