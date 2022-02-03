@@ -41,6 +41,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
+
+    connect(taskTitleText, &QLineEdit::textChanged, this, &MainWindow::updateCurrentItemTitle);
+    connect(taskDescriptionText, &QTextEdit::textChanged, this, &MainWindow::updateCurrentItemDescription);
+
+    connect(completeTaskButton, &QPushButton::clicked, this, &MainWindow::completeCurrentItem);
+
+    updateTaskView();
+    updateActions();
 }
 
 void MainWindow::insertChild()
@@ -59,7 +67,6 @@ void MainWindow::insertChild()
 
     projectTaskView->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
-    updateInterface();
 }
 
 bool MainWindow::insertColumn()
@@ -71,8 +78,6 @@ bool MainWindow::insertColumn()
     bool changed = model->insertColumn(column + 1);
     if (changed)
         model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
-
-    updateInterface();
 
     return changed;
 }
@@ -87,7 +92,6 @@ void MainWindow::insertRow()
 
     projectTaskView->selectionModel()->setCurrentIndex(model->index(index.row() + 1, 0, index.parent()), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
-    updateInterface();
 }
 
 bool MainWindow::removeColumn()
@@ -97,8 +101,6 @@ bool MainWindow::removeColumn()
 
     // Insert columns in each child of the parent item.
     const bool changed = model->removeColumn(column);
-    if (changed)
-        updateInterface();
 
     return changed;
 }
@@ -107,11 +109,47 @@ void MainWindow::removeRow()
 {
     const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
     QAbstractItemModel* model = projectTaskView->model();
-    if (model->removeRow(index.row(), index.parent()))
-        updateInterface();
+    model->removeRow(index.row(), index.parent());
 }
 
-void MainWindow::updateInterface()
+void MainWindow::updateTaskView()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        taskTitleText->setEnabled(false);
+        taskDescriptionText->setEnabled(false);
+        completeTaskButton->setEnabled(false);
+        deleteTaskButton->setEnabled(false);
+
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    taskTitleText->setEnabled(hasCurrent);
+    taskDescriptionText->setEnabled(hasCurrent);
+    completeTaskButton->setEnabled(hasCurrent);
+    deleteTaskButton->setEnabled(hasCurrent);
+
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+
+    if (hasCurrent)
+    {
+        bool taskDone = model->data(model->index(currentIndex.row(), TaskTreeModel::DONE_COL), Qt::DisplayRole).toBool();
+
+        taskTitleText->setText(model->data(model->index(currentIndex.row(), TaskTreeModel::TITLE_COL), Qt::DisplayRole).toString());
+        taskDescriptionText->setText(model->data(model->index(currentIndex.row(), TaskTreeModel::DESC_COL), Qt::DisplayRole).toString());
+
+        taskTitleText->setEnabled(!taskDone);
+        taskDescriptionText->setEnabled(!taskDone);
+        completeTaskButton->setEnabled(!taskDone);
+    }
+}
+
+void MainWindow::updateActions()
 {
     const bool hasModel = projectTaskView->model() != nullptr;
 
@@ -122,15 +160,75 @@ void MainWindow::updateInterface()
         return;
     }
 
-    const bool hasCurrent = projectTaskView->selectionModel()->currentIndex().isValid();
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
     TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
-    const bool taskIsComplete = hasCurrent && !(model->indexIsCompleted(projectTaskView->selectionModel()->currentIndex()));
+    const bool taskIsComplete = hasCurrent && !(model->indexIsCompleted(currentIndex));
 
     actionComplete_Task->setEnabled(taskIsComplete);
+}
 
-    std::ostringstream taskStr;
-    taskStr << model->completedTasks() << " / " << model->totalTasks() << " tasks completed.";
-    statusBar()->showMessage(QString::fromStdString(taskStr.str()));
+void MainWindow::updateCurrentItemTitle()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+
+    if (hasCurrent)
+    {
+        model->setData(model->index(currentIndex.row(), TaskTreeModel::TITLE_COL), taskTitleText->text());
+    }
+}
+
+void MainWindow::updateCurrentItemDescription()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+
+    if (hasCurrent)
+    {
+        model->setData(model->index(currentIndex.row(), TaskTreeModel::DESC_COL), taskDescriptionText->toPlainText());
+    }
+}
+
+void MainWindow::completeCurrentItem()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    TaskTreeModel* model = static_cast<TaskTreeModel*>(projectTaskView->model());
+
+    if (hasCurrent)
+    {
+        model->setData(model->index(currentIndex.row(), TaskTreeModel::DONE_COL), true);
+    }
+
+    updateTaskView();
 }
 
 void MainWindow::saveProject()
@@ -279,11 +377,11 @@ void MainWindow::loadModel(TaskTreeModel* model)
 
     projectNameLabel->setText(model->getProjectName());
 
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateInterface);
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
     connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateInterface);
 
-    updateInterface();
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 }
 
 void MainWindow::toggleProjectActions(bool enabled)
@@ -387,3 +485,4 @@ bool MainWindow::checkDirtyModel()
 
     return true;
 }
+

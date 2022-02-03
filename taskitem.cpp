@@ -1,6 +1,6 @@
 #include "taskitem.h"
 
-QVector<QVariant> TaskItem::defaultValues({"TaskName", "TaskDescription", false});
+QVector<QVariant> TaskItem::defaultValues({"New Task", "No Description", false});
 
 TaskItem::TaskItem(const QVector<QVariant>& data, TaskItem* parent)
     : itemData(data), parentItem(parent)
@@ -36,7 +36,7 @@ int TaskItem::childNumber() const
 
 int TaskItem::columnCount() const
 {
-    return itemData.count();
+    return 1;
 }
 
 QVariant TaskItem::data(int column) const

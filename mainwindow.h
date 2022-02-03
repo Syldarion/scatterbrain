@@ -14,9 +14,10 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
-public slots:
-    void updateInterface();
 private slots:
+    void updateTaskView();
+    void updateActions();
+
     void insertChild();
     bool insertColumn();
     void insertRow();
@@ -33,6 +34,9 @@ private slots:
     void openRandomProject();
     void openProjectAtLocation(QString path);
     bool checkDirtyModel();
+    void updateCurrentItemTitle();
+    void updateCurrentItemDescription();
+    void completeCurrentItem();
 private:
     void loadModel(TaskTreeModel* model);
     void toggleProjectActions(bool enabled);

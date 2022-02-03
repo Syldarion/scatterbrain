@@ -43,16 +43,16 @@ public:
     int totalTopLevelTasks();
     void setProjectName(QString name);
     QString getProjectName();
+
+    const static int TITLE_COL = 0;
+    const static int DESC_COL = 1;
+    const static int DONE_COL = 2;
 private:
     QString projectName;
     TaskItem* getItem(const QModelIndex& index) const;
     TaskItem* rootItem;
     QStringList headerStrings;
     bool isCheckboxColumn(const QModelIndex& index) const;
-
-    const int titleColumn = 0;
-    const int descColumn = 1;
-    const int doneColumn = 2;
 };
 
 #endif // TASKTREEMODEL_H
