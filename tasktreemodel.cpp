@@ -94,15 +94,6 @@ QModelIndex TaskTreeModel::index(int row, int column, const QModelIndex& parent)
     return QModelIndex();
 }
 
-bool TaskTreeModel::insertColumns(int position, int columns, const QModelIndex& parent)
-{
-    beginInsertColumns(parent, position, position + columns - 1);
-    const bool success = rootItem->insertColumns(position, columns);
-    endInsertColumns();
-
-    return success;
-}
-
 bool TaskTreeModel::insertRows(int position, int rows, const QModelIndex& parent)
 {
     TaskItem* parentItem = getItem(parent);
@@ -130,18 +121,6 @@ QModelIndex TaskTreeModel::parent(const QModelIndex& index) const
         return QModelIndex();
 
     return createIndex(parentItem->childNumber(), 0, parentItem);
-}
-
-bool TaskTreeModel::removeColumns(int position, int columns, const QModelIndex& parent)
-{
-    beginRemoveColumns(parent, position, position + columns - 1);
-    const bool success = rootItem->removeColumns(position, columns);
-    endRemoveColumns();
-
-    if (rootItem->columnCount() == 0)
-        removeRows(0, rowCount());
-
-    return success;
 }
 
 bool TaskTreeModel::removeRows(int position, int rows, const QModelIndex& parent)

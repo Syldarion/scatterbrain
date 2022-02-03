@@ -69,19 +69,6 @@ void MainWindow::insertChild()
     projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
 }
 
-bool MainWindow::insertColumn()
-{
-    QAbstractItemModel* model = projectTaskView->model();
-    int column = projectTaskView->selectionModel()->currentIndex().column();
-
-    // Insert a column in the parent item.
-    bool changed = model->insertColumn(column + 1);
-    if (changed)
-        model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
-
-    return changed;
-}
-
 void MainWindow::insertRow()
 {
     const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
@@ -92,17 +79,6 @@ void MainWindow::insertRow()
 
     projectTaskView->selectionModel()->setCurrentIndex(model->index(index.row() + 1, 0, index.parent()), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
-}
-
-bool MainWindow::removeColumn()
-{
-    QAbstractItemModel* model = projectTaskView->model();
-    const int column = projectTaskView->selectionModel()->currentIndex().column();
-
-    // Insert columns in each child of the parent item.
-    const bool changed = model->removeColumn(column);
-
-    return changed;
 }
 
 void MainWindow::removeRow()

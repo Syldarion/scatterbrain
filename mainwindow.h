@@ -19,10 +19,9 @@ private slots:
     void updateActions();
 
     void insertChild();
-    bool insertColumn();
     void insertRow();
-    bool removeColumn();
     void removeRow();
+
     void saveProject();
     void saveProjectAs();
     void newProject();
