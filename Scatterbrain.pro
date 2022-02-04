@@ -11,18 +11,20 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    project.cpp \
+    projectmodel.cpp \
+    projectmodelproxy.cpp \
     settingswindow.cpp \
     taskitem.cpp \
-    tasktreemodel.cpp \
-    tasktreemodelproxy.cpp \
     usersettings.cpp
 
 HEADERS += \
     mainwindow.h \
+    project.h \
+    projectmodel.h \
+    projectmodelproxy.h \
     settingswindow.h \
     taskitem.h \
-    tasktreemodel.h \
-    tasktreemodelproxy.h \
     usersettings.h
 
 FORMS += \

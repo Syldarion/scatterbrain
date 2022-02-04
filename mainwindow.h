@@ -2,8 +2,9 @@
 #define MAINWINDOW_H
 
 #include "ui_mainwindow.h"
-#include "tasktreemodelproxy.h"
-#include "tasktreemodel.h"
+#include "projectmodelproxy.h"
+#include "projectmodel.h"
+#include "project.h"
 #include "settingswindow.h"
 
 #include <QMainWindow>
@@ -42,7 +43,7 @@ private slots:
     void applyTaskChanges();
     void changeCompletedFilter(int state);
 private:
-    void loadModel(TaskTreeModel* model);
+    void loadModel(ProjectModel* model);
     void toggleProjectActions(bool enabled);
     void setModelDirty();
     bool hasFileOpen;
@@ -50,6 +51,6 @@ private:
     SettingsWindow* settingsWindow;
     bool isModelDirty;
     QStringList availableProjectPaths;
-    TaskTreeModelProxy* proxyModel;
+    ProjectModelProxy* proxyModel;
 };
 #endif // MAINWINDOW_H
