@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QRandomGenerator>
+#include <QThread>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -24,7 +25,14 @@ MainWindow::MainWindow(QWidget* parent)
     currentOpenFilePath = "";
     isModelDirty = false;
 
-    proxyModel = new TaskTreeModelProxy(this);
+    proxyModel = new ProjectModelProxy(this);
+    projectTaskView->setModel(proxyModel);
+
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
+
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 
     //UI stuff
     projectTaskView->addActions({actionAdd_Task, actionAdd_Child_Task, actionDelete_Task, actionComplete_Task});
@@ -111,7 +119,6 @@ void MainWindow::updateTaskView()
     }
 
     QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
     const bool hasCurrent = currentIndex.isValid();
 
     taskTitleText->setEnabled(hasCurrent);
@@ -119,22 +126,18 @@ void MainWindow::updateTaskView()
     completeTaskButton->setEnabled(hasCurrent);
     deleteTaskButton->setEnabled(hasCurrent);
 
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
-
     if (hasCurrent)
     {
-        bool taskDone = model->data(model->index(sourceIndex.row(), TaskTreeModel::DONE_COL), Qt::DisplayRole).toBool();
+        QString titleData = proxyModel->getTaskTitle(currentIndex.row());
+        QString descData = proxyModel->getTaskDescription(currentIndex.row());
+        bool doneData = proxyModel->getTaskComplete(currentIndex.row());
 
-        taskTitleText->setText(model->data(model->index(sourceIndex.row(), TaskTreeModel::TITLE_COL), Qt::DisplayRole).toString());
+        taskTitleText->setText(titleData);
+        taskDescriptionText->setText(descData);
 
-        QModelIndex descIndex = model->index(sourceIndex.row(), TaskTreeModel::DESC_COL);
-        QVariant descData = model->data(descIndex, Qt::DisplayRole);
-
-        taskDescriptionText->setText(descData.toString());
-
-        taskTitleText->setEnabled(!taskDone);
-        taskDescriptionText->setEnabled(!taskDone);
-        completeTaskButton->setEnabled(!taskDone);
+        taskTitleText->setEnabled(!doneData);
+        taskDescriptionText->setEnabled(!doneData);
+        completeTaskButton->setEnabled(!doneData);
     }
 }
 
@@ -150,13 +153,10 @@ void MainWindow::updateActions()
     }
 
     QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
     const bool hasCurrent = currentIndex.isValid();
+    const bool taskIsComplete = hasCurrent && proxyModel->getTaskComplete(currentIndex.row());
 
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
-    const bool taskIsComplete = hasCurrent && !(model->indexIsCompleted(sourceIndex));
-
-    actionComplete_Task->setEnabled(taskIsComplete);
+    actionComplete_Task->setEnabled(!taskIsComplete);
 }
 
 void MainWindow::applyTaskChanges()
@@ -175,14 +175,11 @@ void MainWindow::updateCurrentItemTitle()
     }
 
     QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
     const bool hasCurrent = currentIndex.isValid();
-
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
 
     if (hasCurrent)
     {
-        model->setData(model->index(sourceIndex.row(), TaskTreeModel::TITLE_COL), taskTitleText->text());
+        proxyModel->setTaskTitle(currentIndex.row(), taskTitleText->text());
     }
 }
 
@@ -196,14 +193,11 @@ void MainWindow::updateCurrentItemDescription()
     }
 
     QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
     const bool hasCurrent = currentIndex.isValid();
-
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
 
     if (hasCurrent)
     {
-        model->setData(model->index(sourceIndex.row(), TaskTreeModel::DESC_COL), taskDescriptionText->toPlainText());
+        proxyModel->setTaskDescription(currentIndex.row(), taskDescriptionText->toPlainText());
     }
 }
 
@@ -217,14 +211,11 @@ void MainWindow::completeCurrentItem()
     }
 
     QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
     const bool hasCurrent = currentIndex.isValid();
-
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
 
     if (hasCurrent)
     {
-        model->setData(model->index(sourceIndex.row(), TaskTreeModel::DONE_COL), true);
+        proxyModel->setTaskComplete(currentIndex.row(), true);
     }
 
     updateTaskView();
@@ -232,8 +223,6 @@ void MainWindow::completeCurrentItem()
 
 void MainWindow::saveProject()
 {
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
-
     if (!hasFileOpen)
     {
         saveProjectAs();
@@ -249,7 +238,7 @@ void MainWindow::saveProject()
     }
 
     QJsonObject modelObject;
-    model->write(modelObject);
+    proxyModel->getProject()->write(modelObject);
 
     modelFile.write(QJsonDocument(modelObject).toJson());
     modelFile.close();
@@ -263,8 +252,6 @@ void MainWindow::saveProject()
 
 void MainWindow::saveProjectAs()
 {
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
-
     QString docPath = UserSettings::getInstance()->getProjectDirectory();
     QString fileName = QFileDialog::getSaveFileName(this,
                                                     tr("Save Project As"),
@@ -280,7 +267,7 @@ void MainWindow::saveProjectAs()
     }
 
     QJsonObject modelObject;
-    model->write(modelObject);
+    proxyModel->getProject()->write(modelObject);
 
     modelFile.write(QJsonDocument(modelObject).toJson());
     modelFile.close();
@@ -298,7 +285,10 @@ void MainWindow::saveProjectAs()
 void MainWindow::newProject()
 {
     const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
-    TaskTreeModel* model = new TaskTreeModel(headers);
+
+    Project* project = new Project();
+    ProjectModel* model = new ProjectModel();
+    model->setProject(project);
 
     bool ok;
     QString newName = QInputDialog::getText(this,
@@ -353,37 +343,26 @@ void MainWindow::renameOpenProject()
         return;
     }
 
-    TaskTreeModel* model = static_cast<TaskTreeModel*>(proxyModel->sourceModel());
     bool ok;
     QString newName = QInputDialog::getText(this,
                                             tr("Rename Project"),
                                             tr("Project Name:"),
                                             QLineEdit::Normal,
-                                            model->getProjectName(),
+                                            proxyModel->getProjectName(),
                                             &ok);
     if (ok && !newName.isEmpty())
     {
-        model->setProjectName(newName);
-        projectNameLabel->setText(model->getProjectName());
+        proxyModel->setProjectName(newName);
+        projectNameLabel->setText(proxyModel->getProjectName());
     }
 }
 
-void MainWindow::loadModel(TaskTreeModel* model)
+void MainWindow::loadModel(ProjectModel* model)
 {
     proxyModel->setSourceModel(model);
-    projectTaskView->setModel(proxyModel);
     changeCompletedFilter(showCompletedTasksCheckbox->checkState());
 
-    for (int column = 0; column < model->columnCount(); column++)
-        projectTaskView->resizeColumnToContents(column);
-
     projectNameLabel->setText(model->getProjectName());
-
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
-
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 }
 
 void MainWindow::toggleProjectActions(bool enabled)
@@ -444,11 +423,12 @@ void MainWindow::openProjectAtLocation(QString path)
     modelFile.close();
     QJsonDocument modelDoc = QJsonDocument::fromJson(modelData);
 
-    const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
-    TaskTreeModel* model = new TaskTreeModel(headers);
-    model->read(modelDoc.object());
+    Project* project = new Project();
+    project->read(modelDoc.object());
+    ProjectModel* projectModel = new ProjectModel(this);
+    projectModel->setProject(project);
 
-    loadModel(model);
+    loadModel(projectModel);
 
     hasFileOpen = true;
     currentOpenFilePath = path;
