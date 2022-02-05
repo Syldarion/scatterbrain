@@ -81,36 +81,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QTextEdit" name="taskDescriptionText">
+         <widget class="TextEditWithFocusOutEvent" name="taskDescriptionText">
           <property name="placeholderText">
            <string>Task Description</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="taskControls">
-          <item>
-           <widget class="QPushButton" name="applyTaskButton">
-            <property name="text">
-             <string>Apply Changes</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="completeTaskButton">
-            <property name="text">
-             <string>Complete Task</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="deleteTaskButton">
-            <property name="text">
-             <string>Delete Task</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </item>
        </layout>
       </item>
@@ -290,6 +265,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TextEditWithFocusOutEvent</class>
+   <extends>QTextEdit</extends>
+   <header>texteditwithfocusoutevent.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

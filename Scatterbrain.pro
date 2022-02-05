@@ -16,6 +16,7 @@ SOURCES += \
     projectmodelproxy.cpp \
     settingswindow.cpp \
     taskitem.cpp \
+    texteditwithfocusoutevent.cpp \
     usersettings.cpp
 
 HEADERS += \
@@ -25,6 +26,7 @@ HEADERS += \
     projectmodelproxy.h \
     settingswindow.h \
     taskitem.h \
+    texteditwithfocusoutevent.h \
     usersettings.h
 
 FORMS += \

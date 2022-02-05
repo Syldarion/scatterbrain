@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "settingswindow.h"
+#include "texteditwithfocusoutevent.h"
 
 #include <QFile>
 #include <QJsonDocument>
@@ -52,8 +53,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
 
-    connect(completeTaskButton, &QPushButton::clicked, this, &MainWindow::completeCurrentItem);
-    connect(applyTaskButton, &QPushButton::clicked, this, &MainWindow::applyTaskChanges);
+    connect(taskTitleText, &QLineEdit::editingFinished, this, &MainWindow::updateCurrentItemTitle);
+    connect(taskDescriptionText, &TextEditWithFocusOutEvent::lostFocus, this, &MainWindow::updateCurrentItemDescription);
 
     connect(showCompletedTasksCheckbox, &QCheckBox::stateChanged, this, &MainWindow::changeCompletedFilter);
 
@@ -93,8 +94,6 @@ void MainWindow::updateTaskView()
     {
         taskTitleText->setEnabled(false);
         taskDescriptionText->setEnabled(false);
-        completeTaskButton->setEnabled(false);
-        deleteTaskButton->setEnabled(false);
 
         return;
     }
@@ -104,8 +103,6 @@ void MainWindow::updateTaskView()
 
     taskTitleText->setEnabled(hasCurrent);
     taskDescriptionText->setEnabled(hasCurrent);
-    completeTaskButton->setEnabled(hasCurrent);
-    deleteTaskButton->setEnabled(hasCurrent);
 
     if (hasCurrent)
     {
@@ -118,7 +115,6 @@ void MainWindow::updateTaskView()
 
         taskTitleText->setEnabled(!doneData);
         taskDescriptionText->setEnabled(!doneData);
-        completeTaskButton->setEnabled(!doneData);
     }
 }
 
@@ -148,6 +144,8 @@ void MainWindow::applyTaskChanges()
 
 void MainWindow::updateCurrentItemTitle()
 {
+    qDebug("UPDATING CURRENT ITEM TITLE");
+
     const bool hasModel = projectTaskView->model() != nullptr;
 
     if (!hasModel)
@@ -166,6 +164,8 @@ void MainWindow::updateCurrentItemTitle()
 
 void MainWindow::updateCurrentItemDescription()
 {
+    qDebug("UPDATING CURRENT ITEM DESC");
+
     const bool hasModel = projectTaskView->model() != nullptr;
 
     if (!hasModel)
@@ -265,8 +265,6 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::newProject()
 {
-    const QStringList headers({tr("Title"), tr("Description"), tr("Done")});
-
     Project* project = new Project();
     ProjectModel* model = new ProjectModel();
     model->setProject(project);
