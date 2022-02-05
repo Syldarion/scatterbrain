@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 
     //UI stuff
-    projectTaskView->addActions({actionAdd_Task, actionAdd_Child_Task, actionDelete_Task, actionComplete_Task});
+    projectTaskView->addActions({actionAdd_Task, actionDelete_Task, actionComplete_Task});
     projectNameLabel->addAction(actionRename_Project);
 
     connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(actionOpen_Random_Project, &QAction::triggered, this, &MainWindow::openRandomProject);
 
     connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::insertRow);
-    connect(actionAdd_Child_Task, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionDelete_Task, &QAction::triggered, this, &MainWindow::removeRow);
 
     connect(actionRename_Project, &QAction::triggered, this, &MainWindow::renameOpenProject);
@@ -65,24 +64,6 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow()
 {
     delete proxyModel;
-}
-
-void MainWindow::insertChild()
-{
-    const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
-    QAbstractItemModel* model = projectTaskView->model();
-
-    if (model->columnCount(index) == 0)
-    {
-        if (!model->insertColumn(0, index))
-            return;
-    }
-
-    if (!model->insertRow(0, index))
-        return;
-
-    projectTaskView->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
 }
 
 void MainWindow::insertRow()
@@ -370,7 +351,6 @@ void MainWindow::toggleProjectActions(bool enabled)
     actionSave_Project_As->setEnabled(enabled);
     actionSave_Project->setEnabled(enabled);
     actionAdd_Task->setEnabled(enabled);
-    actionAdd_Child_Task->setEnabled(enabled);
     actionDelete_Task->setEnabled(enabled);
     actionComplete_Task->setEnabled(enabled);
     actionRename_Project->setEnabled(enabled);

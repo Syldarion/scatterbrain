@@ -172,7 +172,6 @@
      <string>Task</string>
     </property>
     <addaction name="actionAdd_Task"/>
-    <addaction name="actionAdd_Child_Task"/>
     <addaction name="actionDelete_Task"/>
     <addaction name="actionComplete_Task"/>
    </widget>
@@ -248,17 +247,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Return</string>
-   </property>
-  </action>
-  <action name="actionAdd_Child_Task">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Add Child Task</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Return</string>
    </property>
   </action>
   <action name="actionDelete_Task">

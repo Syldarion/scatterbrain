@@ -22,7 +22,6 @@ private slots:
     void updateTaskView();
     void updateActions();
 
-    void insertChild();
     void insertRow();
     void removeRow();
 
