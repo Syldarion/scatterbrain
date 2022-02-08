@@ -82,6 +82,9 @@
         </item>
         <item>
          <widget class="TextEditWithFocusOutEvent" name="taskDescriptionText">
+          <property name="tabChangesFocus">
+           <bool>true</bool>
+          </property>
           <property name="placeholderText">
            <string>Task Description</string>
           </property>
