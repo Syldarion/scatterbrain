@@ -58,6 +58,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(showCompletedTasksCheckbox, &QCheckBox::stateChanged, this, &MainWindow::changeCompletedFilter);
 
+    connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::updateTaskView);
+
     updateTaskView();
     updateActions();
 }
