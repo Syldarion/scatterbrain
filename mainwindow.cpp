@@ -27,40 +27,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     proxyModel = new ProjectModelProxy(this);
     projectTaskView->setModel(proxyModel);
-
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
-
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
-    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
-
-    //UI stuff
     projectTaskView->addActions({actionAdd_Task, actionDelete_Task, actionComplete_Task});
     projectNameLabel->addAction(actionRename_Project);
 
-    connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
-    connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
-    connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
-    connect(actionOpen_Project, &QAction::triggered, this, &MainWindow::openProject);
-    connect(actionOpen_Random_Project, &QAction::triggered, this, &MainWindow::openRandomProject);
-
-    connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::insertRow);
-    connect(actionDelete_Task, &QAction::triggered, this, &MainWindow::removeRow);
-
-    connect(actionRename_Project, &QAction::triggered, this, &MainWindow::renameOpenProject);
-
-    connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
-    connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
-
-    connect(actionAbout, &QAction::triggered, this, &MainWindow::openAboutDialog);
-    connect(actionContact, &QAction::triggered, this, &MainWindow::openContactDialog);
-
-    connect(taskTitleText, &QLineEdit::editingFinished, this, &MainWindow::updateCurrentItemTitle);
-    connect(taskDescriptionText, &TextEditWithFocusOutEvent::lostFocus, this, &MainWindow::updateCurrentItemDescription);
-
-    connect(showCompletedTasksCheckbox, &QCheckBox::stateChanged, this, &MainWindow::changeCompletedFilter);
-
-    connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::updateTaskView);
+    connectModelSignals();
+    connectActionSignals();
+    connectUiSignals();
 
     updateTaskView();
     updateActions();
@@ -69,141 +41,6 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow()
 {
     delete proxyModel;
-}
-
-void MainWindow::insertRow()
-{
-    const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
-    QAbstractItemModel* model = projectTaskView->model();
-
-    if (!model->insertRow(index.row()+1, index.parent()))
-        return;
-
-    projectTaskView->selectionModel()->setCurrentIndex(model->index(index.row() + 1, 0, index.parent()), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
-}
-
-void MainWindow::removeRow()
-{
-    const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
-    QAbstractItemModel* model = projectTaskView->model();
-    model->removeRow(index.row(), index.parent());
-}
-
-void MainWindow::updateTaskView()
-{
-    const bool hasModel = projectTaskView->model() != nullptr;
-
-    if (!hasModel)
-    {
-        taskTitleText->setEnabled(false);
-        taskDescriptionText->setEnabled(false);
-
-        return;
-    }
-
-    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    const bool hasCurrent = currentIndex.isValid();
-
-    taskTitleText->setEnabled(hasCurrent);
-    taskDescriptionText->setEnabled(hasCurrent);
-
-    if (hasCurrent)
-    {
-        QString titleData = proxyModel->getTaskTitle(currentIndex.row());
-        QString descData = proxyModel->getTaskDescription(currentIndex.row());
-        bool doneData = proxyModel->getTaskComplete(currentIndex.row());
-
-        taskTitleText->setText(titleData);
-        taskDescriptionText->setText(descData);
-
-        taskTitleText->setEnabled(!doneData);
-        taskDescriptionText->setEnabled(!doneData);
-    }
-}
-
-void MainWindow::updateActions()
-{
-    const bool hasModel = projectTaskView->model() != nullptr;
-
-    toggleProjectActions(hasModel);
-
-    if (!hasModel)
-    {
-        return;
-    }
-
-    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    const bool hasCurrent = currentIndex.isValid();
-    const bool taskIsComplete = hasCurrent && proxyModel->getTaskComplete(currentIndex.row());
-
-    actionComplete_Task->setEnabled(!taskIsComplete);
-}
-
-void MainWindow::applyTaskChanges()
-{
-    updateCurrentItemTitle();
-    updateCurrentItemDescription();
-}
-
-void MainWindow::updateCurrentItemTitle()
-{
-    qDebug("UPDATING CURRENT ITEM TITLE");
-
-    const bool hasModel = projectTaskView->model() != nullptr;
-
-    if (!hasModel)
-    {
-        return;
-    }
-
-    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    const bool hasCurrent = currentIndex.isValid();
-
-    if (hasCurrent)
-    {
-        proxyModel->setTaskTitle(currentIndex.row(), taskTitleText->text());
-    }
-}
-
-void MainWindow::updateCurrentItemDescription()
-{
-    qDebug("UPDATING CURRENT ITEM DESC");
-
-    const bool hasModel = projectTaskView->model() != nullptr;
-
-    if (!hasModel)
-    {
-        return;
-    }
-
-    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    const bool hasCurrent = currentIndex.isValid();
-
-    if (hasCurrent)
-    {
-        proxyModel->setTaskDescription(currentIndex.row(), taskDescriptionText->toPlainText());
-    }
-}
-
-void MainWindow::completeCurrentItem()
-{
-    const bool hasModel = projectTaskView->model() != nullptr;
-
-    if (!hasModel)
-    {
-        return;
-    }
-
-    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
-    const bool hasCurrent = currentIndex.isValid();
-
-    if (hasCurrent)
-    {
-        proxyModel->setTaskComplete(currentIndex.row(), true);
-    }
-
-    updateTaskView();
 }
 
 void MainWindow::saveProject()
@@ -306,11 +143,18 @@ void MainWindow::openProject()
     openProjectAtLocation(fileName);
 }
 
-void MainWindow::closeApplication()
+void MainWindow::openRandomProject()
 {
-    if(!checkDirtyModel())
-        return;
-    this->close();
+    int index;
+    QString nextPath;
+
+    do
+    {
+        index = QRandomGenerator::global()->bounded(availableProjectPaths.count());
+        nextPath = availableProjectPaths[index];
+    } while(nextPath == currentOpenFilePath);
+
+    openProjectAtLocation(nextPath);
 }
 
 void MainWindow::renameOpenProject()
@@ -334,27 +178,201 @@ void MainWindow::renameOpenProject()
     }
 }
 
-void MainWindow::loadModel(ProjectModel* model)
+void MainWindow::addNewTask()
 {
-    proxyModel->setSourceModel(model);
-    changeCompletedFilter(showCompletedTasksCheckbox->checkState());
+    const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
+    QAbstractItemModel* model = projectTaskView->model();
 
-    projectNameLabel->setText(model->getProjectName());
+    if (!model->insertRow(index.row()+1, index.parent()))
+        return;
+
+    projectTaskView->selectionModel()->setCurrentIndex(model->index(index.row() + 1, 0, index.parent()), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    projectTaskView->edit(projectTaskView->selectionModel()->currentIndex());
 }
 
-void MainWindow::toggleProjectActions(bool enabled)
+void MainWindow::deleteCurrentTask()
 {
-    actionSave_Project_As->setEnabled(enabled);
-    actionSave_Project->setEnabled(enabled);
-    actionAdd_Task->setEnabled(enabled);
-    actionDelete_Task->setEnabled(enabled);
-    actionComplete_Task->setEnabled(enabled);
-    actionRename_Project->setEnabled(enabled);
+    const QModelIndex index = projectTaskView->selectionModel()->currentIndex();
+    QAbstractItemModel* model = projectTaskView->model();
+    model->removeRow(index.row(), index.parent());
+}
+
+void MainWindow::completeCurrentTask()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    if (hasCurrent)
+    {
+        proxyModel->setTaskComplete(currentIndex.row(), true);
+    }
+
+    updateTaskView();
+}
+
+void MainWindow::openSettingsWindow()
+{
+    SettingsWindow().exec();
+}
+
+void MainWindow::openContactDialog()
+{
+    ContactWindow().exec();
+}
+
+void MainWindow::openAboutDialog()
+{
+    AboutWindow().exec();
+}
+
+void MainWindow::updateCurrentItemTitle()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    if (hasCurrent)
+    {
+        proxyModel->setTaskTitle(currentIndex.row(), taskTitleText->text());
+    }
+}
+
+void MainWindow::updateCurrentItemDescription()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    if (hasCurrent)
+    {
+        proxyModel->setTaskDescription(currentIndex.row(), taskDescriptionText->toPlainText());
+    }
+}
+
+void MainWindow::changeCompletedFilter(int state)
+{
+    proxyModel->setFilterCompleted(!(state == Qt::CheckState::Checked));
+}
+
+void MainWindow::updateTaskView()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    if (!hasModel)
+    {
+        taskTitleText->setEnabled(false);
+        taskDescriptionText->setEnabled(false);
+
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+
+    taskTitleText->setEnabled(hasCurrent);
+    taskDescriptionText->setEnabled(hasCurrent);
+
+    if (hasCurrent)
+    {
+        QString titleData = proxyModel->getTaskTitle(currentIndex.row());
+        QString descData = proxyModel->getTaskDescription(currentIndex.row());
+        bool doneData = proxyModel->getTaskComplete(currentIndex.row());
+
+        taskTitleText->setText(titleData);
+        taskDescriptionText->setText(descData);
+
+        taskTitleText->setEnabled(!doneData);
+        taskDescriptionText->setEnabled(!doneData);
+    }
+}
+
+void MainWindow::updateActions()
+{
+    const bool hasModel = projectTaskView->model() != nullptr;
+
+    toggleProjectActions(hasModel);
+
+    if (!hasModel)
+    {
+        return;
+    }
+
+    QModelIndex currentIndex = projectTaskView->selectionModel()->currentIndex();
+    const bool hasCurrent = currentIndex.isValid();
+    const bool taskIsComplete = hasCurrent && proxyModel->getTaskComplete(currentIndex.row());
+
+    actionComplete_Task->setEnabled(!taskIsComplete);
 }
 
 void MainWindow::setModelDirty()
 {
     isModelDirty = true;
+}
+
+void MainWindow::closeApplication()
+{
+    if(!checkDirtyModel())
+        return;
+    this->close();
+}
+
+void MainWindow::connectModelSignals()
+{
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
+    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
+
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
+    connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
+
+    connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::updateTaskView);
+}
+
+void MainWindow::connectActionSignals()
+{
+    // Project Actions
+    connect(actionSave_Project, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(actionSave_Project_As, &QAction::triggered, this, &MainWindow::saveProjectAs);
+    connect(actionNew_Project, &QAction::triggered, this, &MainWindow::newProject);
+    connect(actionOpen_Project, &QAction::triggered, this, &MainWindow::openProject);
+    connect(actionOpen_Random_Project, &QAction::triggered, this, &MainWindow::openRandomProject);
+    connect(actionRename_Project, &QAction::triggered, this, &MainWindow::renameOpenProject);
+
+    // Task Actions
+    connect(actionAdd_Task, &QAction::triggered, this, &MainWindow::addNewTask);
+    connect(actionDelete_Task, &QAction::triggered, this, &MainWindow::deleteCurrentTask);
+    connect(actionComplete_Task, &QAction::triggered, this, &MainWindow::completeCurrentTask);
+
+    // Other Actions
+    connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettingsWindow);
+    connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
+    connect(actionAbout, &QAction::triggered, this, &MainWindow::openAboutDialog);
+    connect(actionContact, &QAction::triggered, this, &MainWindow::openContactDialog);
+}
+
+void MainWindow::connectUiSignals()
+{
+    connect(taskTitleText, &QLineEdit::editingFinished, this, &MainWindow::updateCurrentItemTitle);
+    connect(taskDescriptionText, &TextEditWithFocusOutEvent::lostFocus, this, &MainWindow::updateCurrentItemDescription);
+    connect(showCompletedTasksCheckbox, &QCheckBox::stateChanged, this, &MainWindow::changeCompletedFilter);
 }
 
 void MainWindow::discoverAvailableProjects()
@@ -366,20 +384,6 @@ void MainWindow::discoverAvailableProjects()
     QString statusMsg;
     statusMsg = QString("Found ") + QString::number(availableProjectPaths.count()) + QString(" projects in ") + docDir.absolutePath();
     statusBar()->showMessage(statusMsg);
-}
-
-void MainWindow::openRandomProject()
-{
-    int index;
-    QString nextPath;
-
-    do
-    {
-        index = QRandomGenerator::global()->bounded(availableProjectPaths.count());
-        nextPath = availableProjectPaths[index];
-    } while(nextPath == currentOpenFilePath);
-
-    openProjectAtLocation(nextPath);
 }
 
 void MainWindow::openProjectAtLocation(QString path)
@@ -416,6 +420,24 @@ void MainWindow::openProjectAtLocation(QString path)
     isModelDirty = false;
 }
 
+void MainWindow::loadModel(ProjectModel* model)
+{
+    proxyModel->setSourceModel(model);
+    changeCompletedFilter(showCompletedTasksCheckbox->checkState());
+
+    projectNameLabel->setText(model->getProjectName());
+}
+
+void MainWindow::toggleProjectActions(bool enabled)
+{
+    actionSave_Project_As->setEnabled(enabled);
+    actionSave_Project->setEnabled(enabled);
+    actionAdd_Task->setEnabled(enabled);
+    actionDelete_Task->setEnabled(enabled);
+    actionComplete_Task->setEnabled(enabled);
+    actionRename_Project->setEnabled(enabled);
+}
+
 bool MainWindow::checkDirtyModel()
 {
     if (isModelDirty)
@@ -442,24 +464,4 @@ bool MainWindow::checkDirtyModel()
     }
 
     return true;
-}
-
-void MainWindow::changeCompletedFilter(int state)
-{
-    proxyModel->setFilterCompleted(!(state == Qt::CheckState::Checked));
-}
-
-void MainWindow::openSettings()
-{
-    SettingsWindow().exec();
-}
-
-void MainWindow::openContactDialog()
-{
-    ContactWindow().exec();
-}
-
-void MainWindow::openAboutDialog()
-{
-    AboutWindow().exec();
 }

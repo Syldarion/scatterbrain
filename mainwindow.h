@@ -21,34 +21,45 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private slots:
-    void updateTaskView();
-    void updateActions();
-
-    void insertRow();
-    void removeRow();
-
+    // Project Slots
     void saveProject();
     void saveProjectAs();
     void newProject();
     void openProject();
-    void openSettings();
-    void closeApplication();
-    void renameOpenProject();
-    void discoverAvailableProjects();
     void openRandomProject();
-    void openProjectAtLocation(QString path);
-    bool checkDirtyModel();
-    void updateCurrentItemTitle();
-    void updateCurrentItemDescription();
-    void completeCurrentItem();
-    void applyTaskChanges();
-    void changeCompletedFilter(int state);
+    void renameOpenProject();
+
+    // Task Slots
+    void addNewTask();
+    void deleteCurrentTask();
+    void completeCurrentTask();
+
+    // Window Slots
+    void openSettingsWindow();
     void openContactDialog();
     void openAboutDialog();
+
+    // UI Slots
+    void updateCurrentItemTitle();
+    void updateCurrentItemDescription();
+    void changeCompletedFilter(int state);
+    void updateTaskView();
+    void updateActions();
+
+    // Other Slots
+    void setModelDirty();
+    void closeApplication();
 private:
+    void connectModelSignals();
+    void connectActionSignals();
+    void connectUiSignals();
+
+    void discoverAvailableProjects();
+    void openProjectAtLocation(QString path);
     void loadModel(ProjectModel* model);
     void toggleProjectActions(bool enabled);
-    void setModelDirty();
+    bool checkDirtyModel();
+
     bool hasFileOpen;
     QString currentOpenFilePath;
     SettingsWindow* settingsWindow;
