@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "settingswindow.h"
 #include "texteditwithfocusoutevent.h"
 
 #include <QFile>
@@ -52,6 +51,9 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(actionSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(actionQuit, &QAction::triggered, this, &MainWindow::closeApplication);
+
+    connect(actionAbout, &QAction::triggered, this, &MainWindow::openAboutDialog);
+    connect(actionContact, &QAction::triggered, this, &MainWindow::openContactDialog);
 
     connect(taskTitleText, &QLineEdit::editingFinished, this, &MainWindow::updateCurrentItemTitle);
     connect(taskDescriptionText, &TextEditWithFocusOutEvent::lostFocus, this, &MainWindow::updateCurrentItemDescription);
@@ -304,12 +306,6 @@ void MainWindow::openProject()
     openProjectAtLocation(fileName);
 }
 
-void MainWindow::openSettings()
-{
-    settingsWindow = new SettingsWindow();
-    settingsWindow->show();
-}
-
 void MainWindow::closeApplication()
 {
     if(!checkDirtyModel())
@@ -453,3 +449,17 @@ void MainWindow::changeCompletedFilter(int state)
     proxyModel->setFilterCompleted(!(state == Qt::CheckState::Checked));
 }
 
+void MainWindow::openSettings()
+{
+    SettingsWindow().exec();
+}
+
+void MainWindow::openContactDialog()
+{
+    ContactWindow().exec();
+}
+
+void MainWindow::openAboutDialog()
+{
+    AboutWindow().exec();
+}

@@ -9,6 +9,8 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    aboutwindow.cpp \
+    contactwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     project.cpp \
@@ -20,6 +22,8 @@ SOURCES += \
     usersettings.cpp
 
 HEADERS += \
+    aboutwindow.h \
+    contactwindow.h \
     mainwindow.h \
     project.h \
     projectmodel.h \
@@ -30,6 +34,8 @@ HEADERS += \
     usersettings.h
 
 FORMS += \
+    aboutwindow.ui \
+    contactwindow.ui \
     mainwindow.ui \
     settingswindow.ui
 

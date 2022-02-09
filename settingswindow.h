@@ -3,13 +3,13 @@
 
 #include "usersettings.h"
 
-#include <QWidget>
+#include <QDialog>
 
 namespace Ui {
 class SettingsWindow;
 }
 
-class SettingsWindow : public QWidget
+class SettingsWindow : public QDialog
 {
     Q_OBJECT
 

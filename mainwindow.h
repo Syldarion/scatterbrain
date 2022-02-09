@@ -6,6 +6,8 @@
 #include "projectmodel.h"
 #include "project.h"
 #include "settingswindow.h"
+#include "aboutwindow.h"
+#include "contactwindow.h"
 
 #include <QMainWindow>
 #include <QContextMenuEvent>
@@ -41,6 +43,8 @@ private slots:
     void completeCurrentItem();
     void applyTaskChanges();
     void changeCompletedFilter(int state);
+    void openContactDialog();
+    void openAboutDialog();
 private:
     void loadModel(ProjectModel* model);
     void toggleProjectActions(bool enabled);

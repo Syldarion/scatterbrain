@@ -168,9 +168,8 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionGithub"/>
-    <addaction name="actionAbout_Scatterbrain"/>
     <addaction name="actionContact"/>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTask"/>
@@ -286,7 +285,7 @@
     <string>Scatterbrain &amp;Github...</string>
    </property>
   </action>
-  <action name="actionAbout_Scatterbrain">
+  <action name="actionAbout">
    <property name="text">
     <string>&amp;About Scatterbrain...</string>
    </property>
