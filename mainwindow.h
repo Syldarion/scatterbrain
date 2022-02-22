@@ -59,6 +59,7 @@ private:
     void loadModel(ProjectModel* model);
     void toggleProjectActions(bool enabled);
     bool checkDirtyModel();
+    void clearTaskView();
 
     bool hasFileOpen;
     QString currentOpenFilePath;

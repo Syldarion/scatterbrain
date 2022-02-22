@@ -337,13 +337,12 @@ void MainWindow::closeApplication()
 
 void MainWindow::connectModelSignals()
 {
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::updateActions);
-    connect(projectTaskView->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::setModelDirty);
-
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateTaskView);
     connect(projectTaskView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 
     connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::updateTaskView);
+    connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::updateActions);
+    connect(proxyModel, &QSortFilterProxyModel::dataChanged, this, &MainWindow::setModelDirty);
 }
 
 void MainWindow::connectActionSignals()
@@ -425,7 +424,10 @@ void MainWindow::loadModel(ProjectModel* model)
     proxyModel->setSourceModel(model);
     changeCompletedFilter(showCompletedTasksCheckbox->checkState());
 
+    clearTaskView();
+
     projectNameLabel->setText(model->getProjectName());
+    projectTaskView->setCurrentIndex(proxyModel->index(0, 0));
 }
 
 void MainWindow::toggleProjectActions(bool enabled)
@@ -464,4 +466,10 @@ bool MainWindow::checkDirtyModel()
     }
 
     return true;
+}
+
+void MainWindow::clearTaskView()
+{
+    taskTitleText->clear();
+    taskDescriptionText->clear();
 }
