@@ -60,6 +60,7 @@ private:
     void toggleProjectActions(bool enabled);
     bool checkDirtyModel();
     void clearTaskView();
+    QString suggestedProjectFileName();
 
     bool hasFileOpen;
     QString currentOpenFilePath;

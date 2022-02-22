@@ -75,9 +75,10 @@ void MainWindow::saveProject()
 void MainWindow::saveProjectAs()
 {
     QString docPath = UserSettings::getInstance()->getProjectDirectory();
+    QString suggestedFileName = QDir::cleanPath(docPath + QDir::separator() + suggestedProjectFileName());
     QString fileName = QFileDialog::getSaveFileName(this,
                                                     tr("Save Project As"),
-                                                    hasFileOpen ? currentOpenFilePath : docPath,
+                                                    hasFileOpen ? currentOpenFilePath : suggestedFileName,
                                                     tr("JSON files (*.json)"));
 
     QFile modelFile(fileName);
@@ -472,4 +473,11 @@ void MainWindow::clearTaskView()
 {
     taskTitleText->clear();
     taskDescriptionText->clear();
+}
+
+QString MainWindow::suggestedProjectFileName()
+{
+    QString projectName = proxyModel->getProjectName();
+    QString projectFileName = projectName.replace(' ', '_');
+    return projectFileName;
 }
